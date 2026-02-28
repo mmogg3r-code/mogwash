@@ -3,6 +3,7 @@ import { BrowserProvider, Contract, formatEther, parseEther } from 'ethers';
 import EthereumProvider from '@walletconnect/ethereum-provider';
 
 const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
+const LOCAL_CONTRACT_KEY = 'neon_reel_contract_address';
 
 function toFixedEth(value) {
   return Number(value || 0).toFixed(4);
@@ -16,7 +17,11 @@ export default function WalletPanel() {
   const [playerStats, setPlayerStats] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  const contractAddress = useMemo(() => import.meta.env.VITE_CONTRACT_ADDRESS || '', []);
+  const envContractAddress = useMemo(() => import.meta.env.VITE_CONTRACT_ADDRESS || '', []);
+  const [contractAddress, setContractAddress] = useState(() => {
+    const persisted = localStorage.getItem(LOCAL_CONTRACT_KEY) || '';
+    return persisted || envContractAddress;
+  });
 
   const contractAbi = [
     'function deposit() external payable',
@@ -44,6 +49,14 @@ export default function WalletPanel() {
 
     tryEagerConnect();
   }, []);
+
+  useEffect(() => {
+    if (contractAddress) {
+      localStorage.setItem(LOCAL_CONTRACT_KEY, contractAddress);
+      return;
+    }
+    localStorage.removeItem(LOCAL_CONTRACT_KEY);
+  }, [contractAddress]);
 
   const loadPlayer = async (activeProvider = provider, activeAccount = account) => {
     if (!activeProvider || !activeAccount || !contractAddress) return;
@@ -158,7 +171,16 @@ export default function WalletPanel() {
         <span className="chain-pill">Chain ID: {CHAIN_ID}</span>
       </div>
       <p className="tiny">Connected account: {account || 'Not connected'}</p>
-      <p className="tiny">Contract: {contractAddress || 'Missing VITE_CONTRACT_ADDRESS'}</p>
+      <p className="tiny">Contract: {contractAddress || 'Set below or via VITE_CONTRACT_ADDRESS'}</p>
+
+      <label>
+        Contract Address
+        <input
+          placeholder="0x..."
+          value={contractAddress}
+          onChange={(e) => setContractAddress(e.target.value.trim())}
+        />
+      </label>
 
       <div className="row">
         <button onClick={connectMetaMask} disabled={busy}>MetaMask</button>

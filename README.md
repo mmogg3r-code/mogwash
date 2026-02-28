@@ -37,6 +37,8 @@ VITE_CHAIN_ID=11155111
 VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 ```
 
+If you don't set `VITE_CONTRACT_ADDRESS`, you can still paste the deployed address directly in the Wallet panel UI at runtime (it is saved in browser local storage).
+
 ---
 
 ## 2) Smart contract behavior
