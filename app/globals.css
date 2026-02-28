@@ -92,3 +92,27 @@ time {
     grid-template-columns: 1fr;
   }
 }
+
+
+.provider-pill {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+  vertical-align: middle;
+}
+
+.item-link {
+  color: #2563eb;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.item-link:hover {
+  text-decoration: underline;
+}

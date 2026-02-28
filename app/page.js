@@ -83,8 +83,8 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>Telegram Real-Time News Desk</h1>
-        <p>Track updates from Telegram groups/channels in real time and filter by source or keyword.</p>
+        <h1>Telegram + X Real-Time News Desk</h1>
+        <p>Track updates from Telegram groups/channels and selected X accounts in real time.</p>
         <span className="status">Status: {status}</span>
       </header>
 
@@ -128,15 +128,22 @@ export default function HomePage() {
 
         <section className="feed">
           <h2>Live Feed ({filtered.length})</h2>
-          {filtered.length === 0 ? <p>No messages yet. Add your bot to groups/channels and post updates.</p> : null}
+          {filtered.length === 0 ? <p>No messages yet. Configure Telegram/X sources and post updates.</p> : null}
           <ul>
             {filtered.map((item) => (
               <li key={item.id}>
                 <div className="item-meta">
-                  <strong>{item.sourceName}</strong>
+                  <strong>
+                    {item.sourceName} <span className="provider-pill">{item.provider ?? item.sourceType}</span>
+                  </strong>
                   <time>{formatDate(item.publishedAt)}</time>
                 </div>
                 <p>{item.text}</p>
+                {item.url ? (
+                  <a href={item.url} target="_blank" rel="noreferrer" className="item-link">
+                    Open post
+                  </a>
+                ) : null}
               </li>
             ))}
           </ul>

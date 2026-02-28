@@ -1,21 +1,20 @@
-# Telegram Real-Time News (Next.js)
+# Telegram + X Real-Time News (Next.js)
 
-A full-stack **Next.js** app that connects to Telegram groups/channels and generates a live news dashboard.
-
-## Why this structure
-
-This project now uses a single supported framework (**Next.js**) with a standard app structure:
-- frontend UI in `app/page.js`
-- backend endpoints in `app/api/*`
-- shared Telegram ingestion service in `lib/telegramService.js`
+A full-stack **Next.js** app that aggregates live posts from Telegram groups/channels and selected X accounts into one real-time news dashboard.
 
 ## Features
 
-- Connects to Telegram via Bot API `getUpdates`
-- Supports messages from `group`, `supergroup`, and `channel`
-- Real-time update push with Server-Sent Events (`/api/stream`)
-- News feed with source filter + keyword search
-- Top sources summary
+- Telegram ingestion via Bot API `getUpdates`
+- X ingestion via X API v2 (`/2/users/:id/tweets`)
+- Combined live feed with source filters + search
+- Real-time push to browser via Server-Sent Events (`/api/stream`)
+- Source leaderboard across Telegram and X
+
+## Project structure
+
+- Frontend UI: `app/page.js`
+- API routes: `app/api/*`
+- Shared ingestion logic: `lib/telegramService.js`
 
 ## Setup
 
@@ -27,9 +26,11 @@ This project now uses a single supported framework (**Next.js**) with a standard
    ```bash
    cp .env.example .env.local
    ```
-3. Add your Telegram bot token in `.env.local`:
+3. Set credentials in `.env.local`:
    ```env
-   TELEGRAM_BOT_TOKEN=<your-token>
+   TELEGRAM_BOT_TOKEN=<telegram-bot-token>
+   X_BEARER_TOKEN=<x-api-bearer-token>
+   X_USER_IDS=<comma-separated-x-user-ids>
    ```
 
 ## Run
@@ -47,14 +48,18 @@ Open: `http://localhost:3000`
 - `GET /api/sources`
 - `GET /api/stream` (SSE)
 
-## Telegram notes
+## How to monitor specific X channels
 
-- Create bot with [@BotFather](https://t.me/BotFather)
-- Add bot to groups/channels you want to monitor
-- For channels, make bot an admin so channel posts are visible
+Set `X_USER_IDS` to the numeric user IDs of the accounts you want to track.
+Example:
 
-## Production notes
+```env
+X_USER_IDS=44196397,783214
+```
 
-- Move in-memory storage to Redis/Postgres for persistence
-- Consider webhooks for higher scale
-- Add authentication/authorization for private dashboards
+(Example IDs above correspond to known accounts and can be replaced with your target accounts.)
+
+## Notes
+
+- This is a prototype using in-memory storage. For production, persist to Redis/Postgres.
+- Ensure your X developer app has access to read tweets for API v2.

@@ -4,11 +4,12 @@ import { getTelegramService } from '@/lib/telegramService';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const telegram = getTelegramService();
+  const liveNews = getTelegramService();
   return NextResponse.json({
     status: 'ok',
-    telegramConnected: telegram.hasToken,
-    sourceCount: telegram.getSources().length,
-    totalItems: telegram.getLatest(1000).length
+    telegramConnected: liveNews.hasTelegramToken,
+    xConnected: liveNews.hasXConfig,
+    sourceCount: liveNews.getSources().length,
+    totalItems: liveNews.getLatest(1000).length
   });
 }
