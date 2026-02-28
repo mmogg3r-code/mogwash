@@ -1,0 +1,97 @@
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header h1 {
+  margin-bottom: 0.2rem;
+}
+
+.status {
+  display: inline-block;
+  margin-top: 0.6rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  font-size: 0.88rem;
+}
+
+.filters {
+  margin: 1.2rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+input,
+select {
+  padding: 0.55rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.45rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+}
+
+.sources,
+.feed {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.sources ul,
+.feed ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sources li,
+.feed li {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0.75rem 0;
+}
+
+.item-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+time {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
