@@ -1,53 +1,60 @@
-# Telegram Real-Time News App
+# Telegram Real-Time News (Next.js)
 
-A full-stack Node.js app that turns Telegram groups/channels into a live news feed.
+A full-stack **Next.js** app that connects to Telegram groups/channels and generates a live news dashboard.
 
-## Stack
+## Why this structure
 
-- **Backend:** Express (Node.js 18/20/22/24 compatible)
-- **Frontend:** React + Parcel
-- **Transport:** Telegram Bot API polling + Server-Sent Events (SSE) to push updates in real time
+This project now uses a single supported framework (**Next.js**) with a standard app structure:
+- frontend UI in `app/page.js`
+- backend endpoints in `app/api/*`
+- shared Telegram ingestion service in `lib/telegramService.js`
 
-## How it works
+## Features
 
-1. Create a Telegram bot with [@BotFather](https://t.me/BotFather) and copy the token.
-2. Add the bot to your target channels/groups.
-   - For channels, make the bot an admin so it can receive `channel_post` updates.
-3. The backend polls Telegram `getUpdates` and normalizes messages into news items.
-4. The frontend listens to `/api/stream` and updates instantly as new posts arrive.
+- Connects to Telegram via Bot API `getUpdates`
+- Supports messages from `group`, `supergroup`, and `channel`
+- Real-time update push with Server-Sent Events (`/api/stream`)
+- News feed with source filter + keyword search
+- Top sources summary
 
 ## Setup
 
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Configure environment:
+   ```bash
+   cp .env.example .env.local
+   ```
+3. Add your Telegram bot token in `.env.local`:
+   ```env
+   TELEGRAM_BOT_TOKEN=<your-token>
+   ```
+
+## Run
+
 ```bash
-npm install
-cp server/.env.example server/.env
+npm run dev
 ```
 
-Edit `server/.env` and set:
+Open: `http://localhost:3000`
 
-```env
-TELEGRAM_BOT_TOKEN=<your-token>
-```
-
-## Run locally
-
-```bash
-npm run dev:server
-npm run dev:client
-```
-
-- Frontend (Parcel): http://localhost:5173
-- Backend: http://localhost:4000
-
-## API endpoints
+## API
 
 - `GET /api/health`
 - `GET /api/news?limit=80`
 - `GET /api/sources`
 - `GET /api/stream` (SSE)
 
+## Telegram notes
+
+- Create bot with [@BotFather](https://t.me/BotFather)
+- Add bot to groups/channels you want to monitor
+- For channels, make bot an admin so channel posts are visible
+
 ## Production notes
 
-- Move in-memory storage to Redis/PostgreSQL for persistence.
-- Use Telegram webhooks behind HTTPS for better scalability.
-- Add auth if this dashboard is private.
+- Move in-memory storage to Redis/Postgres for persistence
+- Consider webhooks for higher scale
+- Add authentication/authorization for private dashboards

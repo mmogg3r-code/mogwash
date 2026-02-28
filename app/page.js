@@ -1,15 +1,12 @@
+'use client';
+
 import { useEffect, useMemo, useState } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
-
 function formatDate(date) {
-  return new Intl.DateTimeFormat(undefined, {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  }).format(new Date(date));
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(date));
 }
 
-export function App() {
+export default function HomePage() {
   const [items, setItems] = useState([]);
   const [sources, setSources] = useState([]);
   const [selectedSource, setSelectedSource] = useState('all');
@@ -17,30 +14,26 @@ export function App() {
   const [status, setStatus] = useState('Connecting...');
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/news?limit=80`)
+    fetch('/api/news?limit=80')
       .then((res) => res.json())
       .then((payload) => setItems(payload.items ?? []))
       .catch(() => setStatus('Failed to load initial news'));
 
-    fetch(`${API_BASE}/api/sources`)
+    fetch('/api/sources')
       .then((res) => res.json())
       .then((payload) => setSources(payload.items ?? []))
       .catch(() => {});
 
-    const events = new EventSource(`${API_BASE}/api/stream`);
+    const events = new EventSource('/api/stream');
 
     events.addEventListener('snapshot', (event) => {
-      const snapshot = JSON.parse(event.data);
-      setItems(snapshot);
+      setItems(JSON.parse(event.data));
       setStatus('Live');
     });
 
     events.addEventListener('news', (event) => {
       const incoming = JSON.parse(event.data);
-      setItems((current) => {
-        const next = [incoming, ...current.filter((item) => item.id !== incoming.id)];
-        return next.slice(0, 200);
-      });
+      setItems((current) => [incoming, ...current.filter((item) => item.id !== incoming.id)].slice(0, 200));
       setSources((current) => {
         const found = current.find((source) => source.sourceId === incoming.sourceId);
         if (!found) {
@@ -59,11 +52,7 @@ export function App() {
         return current
           .map((source) =>
             source.sourceId === incoming.sourceId
-              ? {
-                  ...source,
-                  posts: source.posts + 1,
-                  lastPostAt: incoming.publishedAt
-                }
+              ? { ...source, posts: source.posts + 1, lastPostAt: incoming.publishedAt }
               : source
           )
           .sort((a, b) => b.posts - a.posts);
@@ -71,33 +60,31 @@ export function App() {
     });
 
     events.addEventListener('status', (event) => {
-      const nextStatus = JSON.parse(event.data);
-      if (nextStatus.type === 'error') {
-        setStatus(`Telegram error: ${nextStatus.message}`);
+      const next = JSON.parse(event.data);
+      if (next.type === 'error' || next.type === 'warning') {
+        setStatus(next.message);
       }
     });
 
     events.onerror = () => setStatus('Disconnected. Retrying...');
-
     return () => events.close();
   }, []);
 
-  const filtered = useMemo(() => {
-    return items.filter((item) => {
-      const matchSource = selectedSource === 'all' || item.sourceId === selectedSource;
-      const matchQuery = item.text.toLowerCase().includes(query.toLowerCase());
-      return matchSource && matchQuery;
-    });
-  }, [items, selectedSource, query]);
+  const filtered = useMemo(
+    () =>
+      items.filter((item) => {
+        const sourceMatch = selectedSource === 'all' || item.sourceId === selectedSource;
+        const queryMatch = item.text.toLowerCase().includes(query.toLowerCase());
+        return sourceMatch && queryMatch;
+      }),
+    [items, query, selectedSource]
+  );
 
   return (
     <main className="container">
       <header>
         <h1>Telegram Real-Time News Desk</h1>
-        <p>
-          Track updates from Telegram groups and channels as soon as they are posted, then filter by source
-          or keyword.
-        </p>
+        <p>Track updates from Telegram groups/channels in real time and filter by source or keyword.</p>
         <span className="status">Status: {status}</span>
       </header>
 
@@ -117,8 +104,8 @@ export function App() {
           Search
           <input
             type="search"
-            value={query}
             placeholder="Search text..."
+            value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
@@ -141,7 +128,7 @@ export function App() {
 
         <section className="feed">
           <h2>Live Feed ({filtered.length})</h2>
-          {filtered.length === 0 ? <p>No Telegram messages yet. Add your bot to groups/channels.</p> : null}
+          {filtered.length === 0 ? <p>No messages yet. Add your bot to groups/channels and post updates.</p> : null}
           <ul>
             {filtered.map((item) => (
               <li key={item.id}>

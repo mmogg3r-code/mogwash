@@ -1,5 +1,5 @@
 node_modules
+.next
 .env
 npm-debug.log*
 .DS_Store
-client/dist
