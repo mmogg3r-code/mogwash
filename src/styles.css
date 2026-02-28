@@ -231,3 +231,43 @@ pre {
   padding: 0.75rem;
   border-radius: 8px;
 }
+
+.bet-board {
+  margin: 0.8rem 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.6rem;
+}
+
+.bet-board > div {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 0.5rem;
+}
+
+.bet-board span {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.82;
+}
+
+.bet-board strong {
+  font-size: 1rem;
+  color: #ffe775;
+}
+
+.bet-input {
+  display: block;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.payout-table {
+  margin-top: 1rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.25);
+  padding-top: 0.7rem;
+}
+
+.payout-table ul {
+  margin: 0.3rem 0 0;
+}
