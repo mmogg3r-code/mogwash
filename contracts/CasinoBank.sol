@@ -28,7 +28,7 @@ contract CasinoBank {
 
     modifier nonReentrant() {
         require(unlocked == 1, "Reentrancy blocked");
-        unlocked = 0;
+        unlocked = 2;
         _;
         unlocked = 1;
     }
@@ -41,11 +41,9 @@ contract CasinoBank {
         require(msg.value > 0, "Deposit must be > 0");
 
         Player storage player = players[msg.sender];
-
-        if (!player.exists || player.balance == 0) {
-            player.initialDeposit = msg.value;
-            player.totalWagered = 0;
+        if (!player.exists) {
             player.exists = true;
+            player.initialDeposit = msg.value;
         }
 
         player.balance += msg.value;
@@ -56,6 +54,7 @@ contract CasinoBank {
         require(amount > 0, "Wager must be > 0");
 
         Player storage player = players[msg.sender];
+        require(player.exists, "Player missing");
         require(player.balance >= amount, "Insufficient player balance");
 
         player.balance -= amount;

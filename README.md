@@ -1,18 +1,25 @@
-# Neon Reel Casino (React + Smart Contract)
+# Neon Reel Royale (Hostinger-ready React + Solidity)
 
-A modern slot-lobby style dApp inspired by multi-machine casino sites. It includes:
-- Multi-page slot machine UI (each machine opens on its own route/page)
-- Wallet connectivity for MetaMask and WalletConnect
-- Solidity contract where deployer is admin and manages casino bankroll
-- Player deposit, wager, withdrawal flow with a **20x initial deposit wagering requirement** before withdrawals
+A modern slot-lobby dApp inspired by classic casino machine sites, rebuilt with a stronger visual style and cleaner Web3 flow.
 
-## 1) Project structure
+## What you get
 
-- `src/` React front-end (Vite)
-- `contracts/CasinoBank.sol` Solidity contract
-- `.env.example` required front-end env variables
+- 🎰 Multi-machine lobby with dedicated page per slot (`/slot/:slotId`)
+- ✨ Animated reel demo per machine (frontend)
+- 👛 Wallet support: MetaMask + WalletConnect
+- 🏦 Solidity bankroll contract with admin = deployer
+- 🔒 Withdrawal lock: players can withdraw only after wagering **20x initial deposit**
+- ☁️ Hosting path compatible with Hostinger static hosting
 
-## 2) Local setup
+## Stack
+
+- Frontend: React + Vite + React Router + ethers
+- Contract: Solidity (`contracts/CasinoBank.sol`)
+- Deployment target: Hostinger static site (upload `dist/`)
+
+---
+
+## 1) Local development
 
 ```bash
 npm install
@@ -20,30 +27,58 @@ cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173`.
+Open: `http://localhost:5173`
 
-## 3) Deploy the smart contract
-
-You can deploy with Remix quickly:
-
-1. Open [https://remix.ethereum.org](https://remix.ethereum.org)
-2. Create `CasinoBank.sol` and paste contents from `contracts/CasinoBank.sol`.
-3. Compile with Solidity `0.8.24`.
-4. In **Deploy & Run Transactions**, select **Injected Provider - MetaMask**.
-5. Deploy. The wallet address that deploys becomes `admin` automatically.
-6. Copy deployed contract address.
-
-## 4) Configure frontend for deployed contract
-
-Update `.env`:
+Required env values (`.env`):
 
 ```env
-VITE_CONTRACT_ADDRESS=0x...deployedContract
+VITE_CONTRACT_ADDRESS=0xYourContractAddress
 VITE_CHAIN_ID=11155111
-VITE_WALLETCONNECT_PROJECT_ID=your_wc_project_id
+VITE_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 ```
 
-Get a WalletConnect project id at [https://cloud.walletconnect.com](https://cloud.walletconnect.com).
+---
+
+## 2) Smart contract behavior
+
+`contracts/CasinoBank.sol`:
+
+- `admin` is set once in constructor to `msg.sender` (deployer)
+- `deposit()` increases internal player balance
+- `wager(amount)` deducts player balance and increases total wager + house reserve
+- `withdraw(amount)` requires:
+  - player exists
+  - enough internal balance
+  - `totalWagered >= initialDeposit * 20`
+- `settlePayout(player, amount)` is admin-only (credit player winnings)
+- `fundHouse()` admin-only funding
+
+> Notes:
+> - This contract tracks internal balances. Frontend gameplay is currently demo-only and should be replaced with secure game settlement logic before production use.
+
+---
+
+## 3) Deploy contract quickly (Remix)
+
+1. Open https://remix.ethereum.org
+2. Create file `CasinoBank.sol`
+3. Paste code from `contracts/CasinoBank.sol`
+4. Compile with Solidity `0.8.24`
+5. In **Deploy & Run Transactions**, choose **Injected Provider - MetaMask**
+6. Deploy and confirm transaction
+7. Copy deployed contract address into `.env`
+
+Wallet used for deployment becomes contract admin.
+
+---
+
+## 4) WalletConnect setup
+
+1. Create project at https://cloud.walletconnect.com
+2. Copy Project ID
+3. Set `VITE_WALLETCONNECT_PROJECT_ID` in `.env`
+
+---
 
 ## 5) Build for production
 
@@ -51,17 +86,18 @@ Get a WalletConnect project id at [https://cloud.walletconnect.com](https://clou
 npm run build
 ```
 
-Static assets output to `dist/`.
+Output folder: `dist/`
+
+---
 
 ## 6) Put it online on Hostinger
 
-Because Hostinger supports React/Vite, you can deploy as static build or via Git integration.
+### Option A — Upload static build
 
-### Option A: Upload static build
-1. Run `npm run build` locally.
-2. In Hostinger hPanel, open your site/public folder.
-3. Upload the contents of `dist/`.
-4. Ensure `.htaccess` supports SPA routing (so `/slot/...` resolves to `index.html`):
+1. Build locally: `npm run build`
+2. In Hostinger hPanel, open your domain public root
+3. Upload all files inside `dist/`
+4. Add `.htaccess` for SPA routing:
 
 ```apache
 RewriteEngine On
@@ -72,24 +108,19 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 ```
 
-### Option B: Hostinger Git deployment
-1. Push this project to GitHub.
-2. Connect repository in Hostinger deploy panel.
-3. Set build command: `npm run build`.
-4. Set publish directory: `dist`.
-5. Add environment variables from `.env` in Hostinger dashboard.
+### Option B — Git deployment
 
-## 7) Game flow and contract behavior
+1. Push project to GitHub
+2. Connect repo in Hostinger deployment panel
+3. Build command: `npm run build`
+4. Publish directory: `dist`
+5. Add env vars from `.env` inside Hostinger dashboard
 
-- **deposit()**: Player sends ETH to internal player balance.
-- **wager(amount)**: Deducts player balance and increments total wagered.
-- **withdraw(amount)**: Allowed only when `totalWagered >= initialDeposit * 20`.
-- **settlePayout(player, amount)**: Admin credits winnings to player balance.
-- **admin** is immutable and equals contract deployer address.
+---
 
-## 8) Notes for production hardening
+## 7) Production hardening checklist
 
-- Add audited randomness source (e.g., Chainlink VRF or secure backend signer).
-- Add server-side game result verification and anti-cheat controls.
-- Add KYC/compliance checks based on jurisdictions.
-- Run a full smart contract security audit before launch with real funds.
+- Use verifiable randomness (Chainlink VRF or secure server-side signed outcomes)
+- Add event indexing + analytics dashboard for dispute support
+- Add per-jurisdiction legal/compliance controls
+- Security-audit contract and deployment scripts before handling real funds

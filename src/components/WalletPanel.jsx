@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BrowserProvider, formatEther, parseEther } from 'ethers';
+import { BrowserProvider, Contract, formatEther, parseEther } from 'ethers';
 import EthereumProvider from '@walletconnect/ethereum-provider';
 
 const CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 11155111);
@@ -8,7 +8,8 @@ export default function WalletPanel() {
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState('');
   const [amount, setAmount] = useState('0.01');
-  const [status, setStatus] = useState('Connect a wallet to start.');
+  const [status, setStatus] = useState('Connect wallet to use on-chain bankroll actions.');
+  const [playerStats, setPlayerStats] = useState(null);
 
   const contractAddress = useMemo(() => import.meta.env.VITE_CONTRACT_ADDRESS || '', []);
 
@@ -18,6 +19,19 @@ export default function WalletPanel() {
     'function withdraw(uint256 amount) external',
     'function getPlayer(address player) external view returns (uint256 initialDeposit, uint256 balance, uint256 totalWagered, bool exists)'
   ];
+
+  const loadPlayer = async (activeProvider = provider, activeAccount = account) => {
+    if (!activeProvider || !activeAccount || !contractAddress) return;
+    const signer = await activeProvider.getSigner();
+    const contract = new Contract(contractAddress, contractAbi, signer);
+    const player = await contract.getPlayer(activeAccount);
+    setPlayerStats({
+      initialDeposit: formatEther(player.initialDeposit),
+      balance: formatEther(player.balance),
+      wagered: formatEther(player.totalWagered),
+      unlocked: Number(player.totalWagered) >= Number(player.initialDeposit) * 20
+    });
+  };
 
   const connectMetaMask = async () => {
     if (!window.ethereum) {
@@ -31,6 +45,7 @@ export default function WalletPanel() {
     setProvider(browserProvider);
     setAccount(address);
     setStatus('Connected with MetaMask.');
+    await loadPlayer(browserProvider, address);
   };
 
   const connectWalletConnect = async () => {
@@ -41,13 +56,13 @@ export default function WalletPanel() {
     });
 
     await walletConnectProvider.enable();
-
     const browserProvider = new BrowserProvider(walletConnectProvider);
     const signer = await browserProvider.getSigner();
     const address = await signer.getAddress();
     setProvider(browserProvider);
     setAccount(address);
     setStatus('Connected with WalletConnect.');
+    await loadPlayer(browserProvider, address);
   };
 
   const callContract = async (methodName) => {
@@ -56,10 +71,10 @@ export default function WalletPanel() {
       return;
     }
 
-    const signer = await provider.getSigner();
-    const contract = new (await import('ethers')).Contract(contractAddress, contractAbi, signer);
-
     try {
+      const signer = await provider.getSigner();
+      const contract = new Contract(contractAddress, contractAbi, signer);
+
       if (methodName === 'deposit') {
         const tx = await contract.deposit({ value: parseEther(amount) });
         await tx.wait();
@@ -75,11 +90,10 @@ export default function WalletPanel() {
       if (methodName === 'withdraw') {
         const tx = await contract.withdraw(parseEther(amount));
         await tx.wait();
-        setStatus(`Withdrawal sent: ${amount} ETH`);
+        setStatus(`Withdrawal confirmed: ${amount} ETH`);
       }
 
-      const player = await contract.getPlayer(account);
-      setStatus((prev) => `${prev}\nPlayer balance: ${formatEther(player.balance)} ETH | Wagered: ${formatEther(player.totalWagered)} ETH`);
+      await loadPlayer();
     } catch (error) {
       setStatus(error.shortMessage || error.message || 'Transaction failed');
     }
@@ -87,21 +101,50 @@ export default function WalletPanel() {
 
   return (
     <section className="wallet-panel">
-      <h2>Wallet + Contract Panel</h2>
-      <p className="tiny">Account: {account || 'Not connected'}</p>
-      <div className="row">
-        <button onClick={connectMetaMask}>Connect MetaMask</button>
-        <button onClick={connectWalletConnect}>Connect WalletConnect</button>
+      <div className="section-title-row">
+        <h2>Wallet & Bankroll</h2>
+        <span className="chain-pill">Chain ID: {CHAIN_ID}</span>
       </div>
+      <p className="tiny">Connected account: {account || 'Not connected'}</p>
+
+      <div className="row">
+        <button onClick={connectMetaMask}>MetaMask</button>
+        <button onClick={connectWalletConnect}>WalletConnect</button>
+        <button onClick={() => loadPlayer()}>Refresh</button>
+      </div>
+
       <label>
         Amount (ETH)
         <input value={amount} onChange={(e) => setAmount(e.target.value)} />
       </label>
+
       <div className="row">
         <button onClick={() => callContract('deposit')}>Deposit</button>
-        <button onClick={() => callContract('wager')}>Record Wager</button>
+        <button onClick={() => callContract('wager')}>Wager</button>
         <button onClick={() => callContract('withdraw')}>Withdraw</button>
       </div>
+
+      {playerStats && (
+        <div className="stats-grid">
+          <div>
+            <span>Initial Deposit</span>
+            <strong>{playerStats.initialDeposit} ETH</strong>
+          </div>
+          <div>
+            <span>Balance</span>
+            <strong>{playerStats.balance} ETH</strong>
+          </div>
+          <div>
+            <span>Total Wagered</span>
+            <strong>{playerStats.wagered} ETH</strong>
+          </div>
+          <div>
+            <span>Withdraw Status</span>
+            <strong>{playerStats.unlocked ? 'Unlocked ✅' : 'Locked (20x needed)'}</strong>
+          </div>
+        </div>
+      )}
+
       <pre>{status}</pre>
     </section>
   );
