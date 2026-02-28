@@ -1,6 +1,8 @@
 import { getTelegramService } from '@/lib/telegramService';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const encoder = new TextEncoder();
 
@@ -10,6 +12,7 @@ function sse(event, data) {
 
 export async function GET() {
   const telegram = getTelegramService();
+  let cleanup = () => {};
 
   const stream = new ReadableStream({
     start(controller) {
@@ -25,22 +28,23 @@ export async function GET() {
         controller.enqueue(sse('heartbeat', {}));
       }, 15000);
 
-      this.cleanup = () => {
+      cleanup = () => {
         clearInterval(heartbeat);
         telegram.off('news', onNews);
         telegram.off('status', onStatus);
       };
     },
     cancel() {
-      if (this.cleanup) this.cleanup();
+      cleanup();
     }
   });
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/event-stream',
+      'Content-Type': 'text/event-stream; charset=utf-8',
       'Cache-Control': 'no-cache, no-transform',
-      Connection: 'keep-alive'
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no'
     }
   });
 }
