@@ -1,5 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { BrowserProvider, Contract, parseEther } from 'ethers';
+
+const LOCAL_CONTRACT_KEY = 'neon_reel_contract_address';
 
 function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)];
@@ -36,10 +39,12 @@ export default function SlotPage({ slots }) {
   const defaultReels = useMemo(() => ['🍒', '7️⃣', '💎', '🍋', '⭐'], []);
   const [reels, setReels] = useState(defaultReels);
   const [spinning, setSpinning] = useState(false);
+  const [playingEth, setPlayingEth] = useState(false);
   const [betAmount, setBetAmount] = useState(Number(slot?.minBet || 0.001));
   const [message, setMessage] = useState('Set your bet and spin.');
   const [lastWin, setLastWin] = useState(0);
   const [lastMultiplier, setLastMultiplier] = useState(0);
+  const [txStatus, setTxStatus] = useState('');
 
   if (!slot) {
     return (
@@ -52,20 +57,24 @@ export default function SlotPage({ slots }) {
 
   const potentialTopWin = (Number(betAmount || 0) * PAYOUT_MULTIPLIERS.jackpot77777).toFixed(4);
 
-  const spin = () => {
-    if (spinning) return;
-
+  const validateBet = () => {
     const bet = Number(betAmount);
     const minBet = Number(slot.minBet);
+
     if (Number.isNaN(bet) || bet <= 0) {
       setMessage('Bet amount must be greater than 0.');
-      return;
-    }
-    if (bet < minBet) {
-      setMessage(`Minimum bet for this machine is ${slot.minBet} ETH.`);
-      return;
+      return null;
     }
 
+    if (bet < minBet) {
+      setMessage(`Minimum bet for this machine is ${slot.minBet} ETH.`);
+      return null;
+    }
+
+    return bet;
+  };
+
+  const performSpin = (bet) => {
     setSpinning(true);
     setMessage('Spinning...');
 
@@ -81,6 +90,48 @@ export default function SlotPage({ slots }) {
       setMessage(result.label);
       setSpinning(false);
     }, 900);
+  };
+
+  const spinDemo = () => {
+    if (spinning || playingEth) return;
+    const bet = validateBet();
+    if (!bet) return;
+    performSpin(bet);
+  };
+
+  const playWithEth = async () => {
+    if (spinning || playingEth) return;
+    const bet = validateBet();
+    if (!bet) return;
+
+    const contractAddress = localStorage.getItem(LOCAL_CONTRACT_KEY) || import.meta.env.VITE_CONTRACT_ADDRESS || '';
+    if (!contractAddress) {
+      setTxStatus('No contract configured. Set contract address in Wallet panel first.');
+      return;
+    }
+
+    if (!window.ethereum) {
+      setTxStatus('MetaMask browser wallet is required for Play with ETH.');
+      return;
+    }
+
+    try {
+      setPlayingEth(true);
+      setTxStatus('Waiting for wallet confirmation...');
+      const provider = new BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const abi = ['function wager(uint256 amount) external'];
+      const contract = new Contract(contractAddress, abi, signer);
+      const tx = await contract.wager(parseEther(String(bet)));
+      setTxStatus('Transaction submitted. Waiting for confirmation...');
+      await tx.wait();
+      setTxStatus(`Wager recorded on-chain: ${bet.toFixed(4)} ETH`);
+      performSpin(bet);
+    } catch (error) {
+      setTxStatus(error.shortMessage || error.message || 'ETH play failed');
+    } finally {
+      setPlayingEth(false);
+    }
   };
 
   return (
@@ -133,9 +184,16 @@ export default function SlotPage({ slots }) {
             </div>
 
             <p className="spin-msg">{message}</p>
-            <button className="spin" onClick={spin} disabled={spinning}>
-              {spinning ? 'Spinning...' : 'Spin Demo Reel'}
-            </button>
+            <div className="row play-actions">
+              <button className="spin" onClick={spinDemo} disabled={spinning || playingEth}>
+                {spinning ? 'Spinning...' : 'Spin Demo Reel'}
+              </button>
+              <button className="play-eth" onClick={playWithEth} disabled={spinning || playingEth}>
+                {playingEth ? 'Playing with ETH...' : 'Play with ETH'}
+              </button>
+            </div>
+
+            {txStatus && <p className="tiny tx-status">{txStatus}</p>}
           </div>
 
           <aside className="machine-aside">
@@ -158,8 +216,8 @@ export default function SlotPage({ slots }) {
             </div>
 
             <p className="tiny">
-              This spin system is demo-only. Production games should settle through secure backend logic and admin payout
-              settlement on-chain.
+              Play with ETH records `wager(amount)` on-chain first, then runs the visual spin. Real payout settlement must
+              be credited by admin/backend logic.
             </p>
           </aside>
         </section>

@@ -6,6 +6,7 @@ A modern slot-lobby dApp inspired by classic casino machine sites, rebuilt with 
 
 - 🎰 Multi-machine lobby with dedicated page per slot (`/slot/:slotId`)
 - ✨ Animated reel demo per machine (frontend)
+- 💸 Slot page includes **Play with ETH** button (records `wager(amount)` on-chain before visual spin)
 - 👛 Wallet support: MetaMask + WalletConnect
 - 🏦 Solidity bankroll contract with admin = deployer
 - 🔒 Withdrawal lock: players can withdraw only after wagering **20x initial deposit**

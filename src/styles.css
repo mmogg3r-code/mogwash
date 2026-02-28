@@ -246,11 +246,20 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.play-eth {
+  background: linear-gradient(120deg, #179d7c, #1dc992);
+  border-color: rgba(182, 255, 224, 0.35);
+}
+
 .row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0.8rem 0;
+}
+
+.play-actions {
+  align-items: center;
 }
 
 input {
@@ -386,6 +395,10 @@ input {
   opacity: 0.86;
   font-size: 0.87rem;
   color: #b7c9ef;
+}
+
+.tx-status {
+  margin-top: 0.4rem;
 }
 
 pre {
