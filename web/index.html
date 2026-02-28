@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mogwash Recovery UI</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>Mogwash Media Recovery UI</h1>
+      <p>Run aggressive deleted-file recovery from your browser.</p>
+
+      <form id="recovery-form">
+        <label>Input image/dump path
+          <input name="input" required placeholder="/path/to/disk.img" />
+        </label>
+
+        <label>Output directory
+          <input name="output" required placeholder="/path/to/recovered" />
+        </label>
+
+        <label>Types (CSV)
+          <input name="types" value="jpg,png,gif,webp,heic,mp4,mov,3gp,mkv,avi" />
+        </label>
+
+        <div class="grid">
+          <label>Min size (KB)
+            <input name="min_size_kb" type="number" value="8" min="1" />
+          </label>
+
+          <label>Max files
+            <input name="max_files" type="number" min="1" />
+          </label>
+
+          <label>Chunk size (MB)
+            <input name="chunk_size_mb" type="number" value="16" min="1" />
+          </label>
+
+          <label>Aggressive level
+            <select name="aggressive_level">
+              <option value="0">0 (safe)</option>
+              <option value="1">1 (fallback carve)</option>
+              <option value="2" selected>2 (aggressive default)</option>
+              <option value="3">3 (deep backtracking)</option>
+            </select>
+          </label>
+        </div>
+
+        <label>Report prefix
+          <input name="report_prefix" value="recovery_report" />
+        </label>
+
+        <div class="checks">
+          <label><input type="checkbox" name="dry_run" /> Dry run</label>
+          <label><input type="checkbox" name="verbose" checked /> Verbose</label>
+          <label><input type="checkbox" name="no_dedupe" /> Disable dedupe</label>
+        </div>
+
+        <button type="submit">Start Recovery</button>
+      </form>
+
+      <section>
+        <h2>Result</h2>
+        <pre id="output">No run yet.</pre>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
