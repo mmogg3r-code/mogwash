@@ -1,5 +1,6 @@
 'use client';
 
+import Script from 'next/script';
 import { useEffect, useMemo, useState } from 'react';
 
 function formatDate(date) {
@@ -149,6 +150,16 @@ export default function HomePage() {
           </ul>
         </section>
       </section>
+
+      <section className="external-widgets">
+        <h2>External News Widgets</h2>
+        <rssapp-feed id="dNOiySZc7efwVDQD" />
+        <rssapp-feed id="3GA7OFbf43Rhqhbu" />
+        <rssapp-wall id="NfTwYr9XfOjmCL1Q" />
+      </section>
+
+      <Script src="https://widget.rss.app/v1/feed.js" strategy="afterInteractive" />
+      <Script src="https://widget.rss.app/v1/wall.js" strategy="afterInteractive" />
     </main>
   );
 }
